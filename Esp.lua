@@ -93,6 +93,18 @@ local function createESP(player)
     end
 end
 
+-- Функция для обновления ролей игроков
+local function updateRoles()
+    while espEnabled do
+        for _, player in ipairs(game.Players:GetPlayers()) do
+            if player.Character then
+                applyESP(player.Character, player)
+            end
+        end
+        wait(1)  -- Проверяем роли каждую секунду
+    end
+end
+
 -- Обработка добавления и удаления игроков
 game.Players.PlayerAdded:Connect(createESP)
 game.Players.PlayerRemoving:Connect(function(player)
@@ -103,3 +115,6 @@ end)
 for _, player in ipairs(game.Players:GetPlayers()) do
     createESP(player)
 end
+
+-- Запускаем обновление ролей
+updateRoles()
