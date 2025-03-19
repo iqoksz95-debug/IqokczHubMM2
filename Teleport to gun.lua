@@ -41,9 +41,3 @@ local function TeleportToGun()
         warn("Пистолет не найден на карте!")
     end
 end
-
--- Кнопка для подбора оружия (телепортация к пистолету)
-Button(Main, "Grab Gun", function()
-    -- Вызываем функцию телепортации
-    TeleportToGun()
-end)
