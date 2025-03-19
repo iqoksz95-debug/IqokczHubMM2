@@ -1,43 +1,37 @@
 -- Получение локального игрока
 local Plr = game:GetService("Players").LocalPlayer
 
--- Функция для поиска GunDrop в workspace (включая вложенные части)
+-- Функция для поиска GunDrop в workspace
 local function FindGunDrop()
-    -- Рекурсивно ищем GunDrop в workspace
-    local function searchInModel(model)
-        for _, child in pairs(model:GetChildren()) do
-            if child.Name == "GunDrop" then
-                return child
-            elseif child:IsA("Model") or child:IsA("Folder") then
-                local found = searchInModel(child)
-                if found then
-                    return found
-                end
-            end
-        end
+    -- Ищем объект GunDrop в workspace
+    local gunDrop = workspace:FindFirstChild("GunDrop")
+    
+    -- Если GunDrop не найден, выводим предупреждение
+    if not gunDrop then
+        warn("GunDrop не найден в workspace!")
         return nil
     end
-
-    -- Начинаем поиск с workspace
-    return searchInModel(workspace)
+    
+    return gunDrop
 end
 
 -- Функция для телепортации к пистолету
 local function TeleportToGun()
+    -- Проверяем, есть ли у игрока персонаж и HumanoidRootPart
+    if not Plr.Character or not Plr.Character:FindFirstChild("HumanoidRootPart") then
+        warn("У игрока нет персонажа или HumanoidRootPart!")
+        return
+    end
+
     -- Ищем объект GunDrop
     local gunDrop = FindGunDrop()
     
-    -- Проверяем, существует ли GunDrop
+    -- Если GunDrop найден, телепортируем игрока к нему
     if gunDrop then
-        -- Проверяем, есть ли у игрока персонаж и HumanoidRootPart
-        if Plr.Character and Plr.Character:FindFirstChild("HumanoidRootPart") then
-            -- Телепортируем игрока к пистолету с небольшим смещением по оси Y
-            Plr.Character.HumanoidRootPart.CFrame = gunDrop.CFrame + Vector3.new(0, 2, 0)
-            print("Телепортация к пистолету выполнена!")
-        else
-            warn("У игрока нет персонажа или HumanoidRootPart!")
-        end
+        -- Телепортируем игрока к GunDrop с небольшим смещением по оси Y
+        Plr.Character.HumanoidRootPart.CFrame = gunDrop.CFrame + Vector3.new(0, 2, 0)
+        print("Телепортация к GunDrop выполнена!")
     else
-        warn("Пистолет не найден на карте!")
+        warn("GunDrop не найден!")
     end
 end
