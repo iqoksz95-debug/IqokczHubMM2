@@ -1,28 +1,11 @@
--- Получение локального игрока
-local Plr = game:GetService("Players").LocalPlayer
-
--- Функция для поиска сброшенного пистолета
-function FindGunDrop()
-    -- Ищем объект "GunDrop" в рабочем пространстве
+local function TeleportToGun()
     local gunDrop = workspace:FindFirstChild("GunDrop")
     if gunDrop then
-        return gunDrop
+        local player = game.Players.LocalPlayer
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = gunDrop.CFrame + Vector3.new(0, 2, 0)  -- Добавляем небольшое смещение, чтобы игрок не застрял в пистолете
+        end
     else
-        return nil
+        warn("Пистолет не найден на карте!")
     end
 end
-
--- Функция для телепорта к сброшенному пистолету
-function TeleportToGunDrop()
-    local gunDrop = FindGunDrop()
-    if gunDrop then
-        -- Телепортируем игрока к позиции пистолета
-        Plr.Character.HumanoidRootPart.CFrame = gunDrop.CFrame
-        print("Телепорт к сброшенному пистолету выполнен!")
-    else
-        warn("Сброшенный пистолет не найден.")
-    end
-end
-
--- Вызов функции для телепорта
-TeleportToGunDrop()
