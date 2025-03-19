@@ -6,7 +6,7 @@ local function FindGunDrop()
     -- Рекурсивно ищем GunDrop в workspace
     local function searchInModel(model)
         for _, child in pairs(model:GetChildren()) do
-            if child.Name == "GunDrop" then
+            if child.Name == "GunDrop" and child:IsA("BasePart") then
                 return child
             elseif child:IsA("Model") or child:IsA("Folder") then
                 local found = searchInModel(child)
@@ -39,5 +39,21 @@ local function TeleportToGun()
         end
     else
         warn("GunDrop не найден!")
+    end
+end
+
+-- Обработчик события смерти шерифа
+local function OnSheriffDeath()
+    -- Ждем некоторое время, чтобы GunDrop успел появиться
+    wait(2)  -- Можно увеличить время, если необходимо
+    TeleportToGun()
+end
+
+-- Предположим, что у шерифа есть Humanoid, и мы можем отследить его смерть
+local sheriff = -- Здесь должен быть код для получения шерифа
+if sheriff and sheriff.Character then
+    local humanoid = sheriff.Character:FindFirstChild("Humanoid")
+    if humanoid then
+        humanoid.Died:Connect(OnSheriffDeath)
     end
 end
