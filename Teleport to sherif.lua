@@ -11,6 +11,15 @@ function GetSheriff()
     return nil
 end
 
+-- Функция для телепорта к игроку
+function TeleportToPlayer(player)
+    if player and player:FindFirstChild("HumanoidRootPart") then
+        Plr.Character.HumanoidRootPart.CFrame = player.HumanoidRootPart.CFrame
+    else
+        warn("Игрок не найден или у него нет HumanoidRootPart.")
+    end
+end
+
 -- Телепорт к шерифу
 local sheriff = GetSheriff()
 if sheriff then
