@@ -1,12 +1,16 @@
 local AutoFarmEnabled = false
 local coinsCollected = 0  -- Инициализация переменной для подсчета монет
 
--- Функция для поиска монет на карте
+-- Функция для поиска монет в ReplicatedStorage
 function FindCoins()
     local coins = {}
-    for _, coin in pairs(workspace:GetChildren()) do
-        if coin.Name == "Coin" and coin:IsA("BasePart") then
-            table.insert(coins, coin)
+    local coinObjects = game:GetService("ReplicatedStorage"):FindFirstChild("CoinObjects")
+    
+    if coinObjects then
+        for _, coin in pairs(coinObjects:GetDescendants()) do
+            if coin.Name == "Coin" and coin:IsA("BasePart") then
+                table.insert(coins, coin)
+            end
         end
     end
     return coins
