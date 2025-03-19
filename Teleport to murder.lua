@@ -11,7 +11,10 @@ function GetMurderer()
     return nil
 end
 
--- Функция для телепортации к убийце
-local function TeleportToMurderer()
-    Plr.Character.HumanoidRootPart.CFrame = GetMurderer() ~= nil and GetMurderer().HumanoidRootPart.CFrame or Plr.Character.HumanoidRootPart.CFrame
+-- Телепорт к убийце
+local murderer = GetMurderer()
+if murderer then
+    TeleportToPlayer(murderer)
+else
+    warn("Убийца не найден.")
 end
