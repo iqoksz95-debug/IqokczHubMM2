@@ -12,12 +12,17 @@ function FindCoins()
     return coins
 end
 
--- Функция для телепортации к монете
-function TeleportToCoin(coin)
+-- Функция для телепортации к монете и её сбора
+function CollectCoin(coin)
     local Plr = game:GetService("Players").LocalPlayer
     if Plr.Character and Plr.Character:FindFirstChild("HumanoidRootPart") then
+        -- Телепортация к монете
         Plr.Character.HumanoidRootPart.CFrame = coin.CFrame
         wait(0.5)  -- Ожидание для сбора монеты
+
+        -- Симуляция сбора монеты (если требуется)
+        firetouchinterest(Plr.Character.HumanoidRootPart, coin, 0)
+        firetouchinterest(Plr.Character.HumanoidRootPart, coin, 1)
     end
 end
 
@@ -30,7 +35,7 @@ function ToggleAutoFarm(state)
     end
 end
 
--- Измененная функция AutoFarmCoins
+-- Основная функция для автоматического сбора монет
 function AutoFarmCoins()
     while AutoFarmEnabled and coinsCollected < 40 do
         local coins = FindCoins()
@@ -40,13 +45,14 @@ function AutoFarmCoins()
         end
 
         for _, coin in pairs(coins) do
-            if coinsCollected >= 40 then
+            if not AutoFarmEnabled or coinsCollected >= 40 then
                 break
             end
 
-            TeleportToCoin(coin)
+            CollectCoin(coin)
             coinsCollected = coinsCollected + 1
             print("Собрано монет: " .. coinsCollected)
+            wait(1)  -- Ожидание перед сбором следующей монеты
         end
     end
 
