@@ -1,9 +1,31 @@
 local AutoFarmEnabled = false
+local coinsCollected = 0  -- Инициализация переменной для подсчета монет
+
+-- Функция для поиска монет на карте
+function FindCoins()
+    local coins = {}
+    for _, coin in pairs(workspace:GetChildren()) do
+        if coin.Name == "Coin" and coin:IsA("BasePart") then
+            table.insert(coins, coin)
+        end
+    end
+    return coins
+end
+
+-- Функция для телепортации к монете
+function TeleportToCoin(coin)
+    local Plr = game:GetService("Players").LocalPlayer
+    if Plr.Character and Plr.Character:FindFirstChild("HumanoidRootPart") then
+        Plr.Character.HumanoidRootPart.CFrame = coin.CFrame
+        wait(0.5)  -- Ожидание для сбора монеты
+    end
+end
 
 -- Функция для переключения Auto Farm
 function ToggleAutoFarm(state)
     AutoFarmEnabled = state
     if state then
+        coinsCollected = 0  -- Сброс счетчика монет при включении автофарма
         AutoFarmCoins()
     end
 end
@@ -32,10 +54,3 @@ function AutoFarmCoins()
         warn("Сбор монет завершен! Собрано: " .. coinsCollected)
     end
 end
-
--- Пример создания переключателя в GUI
-local win = DiscordLib:Window("Murder Mystery 2")
-local serv = win:Server("ByteHub", "http://www.roblox.com/asset/?id=6031075938")
-local Main = serv:Channel("Main")
-
-Main:Toggle("Auto Farm Coins", false, ToggleAutoFarm)
