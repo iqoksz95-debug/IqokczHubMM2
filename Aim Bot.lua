@@ -43,5 +43,20 @@ function AimBot()
     Camera.CFrame = CFrame.new(Camera.CFrame.Position, Torso.Position)
 end
 
+-- Функция для проверки, жив ли локальный игрок
+function IsPlayerAlive()
+    if not Plr.Character then
+        return false
+    end
+    local humanoid = Plr.Character:FindFirstChild("Humanoid")
+    return humanoid and humanoid.Health > 0
+end
+
+-- Внутри функции AimBot добавь проверку:
+if not IsPlayerAlive() then
+    warn("Локальный игрок мертв, аимбот отключен!")
+    return
+end
+
 -- Подключение функции AimBot к Heartbeat
 game:GetService("RunService").Heartbeat:Connect(AimBot)
