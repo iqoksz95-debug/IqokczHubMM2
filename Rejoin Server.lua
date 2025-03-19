@@ -1,4 +1,5 @@
 -- Функция для повторного присоединения к игре
 local function RejoinServer()
-    game:GetService('TeleportService'):Teleport(game.PlaceId, Plr)
+    task.wait(5)
+    game:GetService('TeleportService'):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
 end
