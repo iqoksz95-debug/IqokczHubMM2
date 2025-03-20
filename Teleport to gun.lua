@@ -1,59 +1,60 @@
 -- Получение локального игрока
 local Plr = game:GetService("Players").LocalPlayer
 
--- Функция для поиска GunDrop в workspace (включая вложенные части)
-local function FindGunDrop()
-    -- Рекурсивно ищем GunDrop в workspace
-    local function searchInModel(model)
-        for _, child in pairs(model:GetChildren()) do
-            if child.Name == "GunDrop" and child:IsA("BasePart") then
-                return child
-            elseif child:IsA("Model") or child:IsA("Folder") then
-                local found = searchInModel(child)
-                if found then
-                    return found
-                end
+-- Функция для поиска шерифа
+function GetSheriff()
+    for _, v in pairs(game:GetService("Players"):GetPlayers()) do
+        if v ~= Plr then -- Исключаем себя из поиска
+            if (v.Backpack:FindFirstChild("Gun") or (v.Character and v.Character:FindFirstChild("Gun"))) then
+                return v
             end
         end
-        return nil
     end
-
-    -- Начинаем поиск с workspace
-    return searchInModel(workspace)
+    return nil
 end
 
 -- Функция для телепортации к пистолету
-local function TeleportToGun()
-    -- Ищем объект GunDrop
-    local gunDrop = FindGunDrop()
-    
-    -- Проверяем, существует ли GunDrop
-    if gunDrop then
-        -- Проверяем, есть ли у игрока персонаж и HumanoidRootPart
-        if Plr.Character and Plr.Character:FindFirstChild("HumanoidRootPart") then
-            -- Телепортируем игрока к пистолету с небольшим смещением по оси Y
-            Plr.Character.HumanoidRootPart.CFrame = gunDrop.CFrame + Vector3.new(0, 2, 0)
-            print("Телепортация к GunDrop выполнена!")
-        else
-            warn("У игрока нет персонажа или HumanoidRootPart!")
-        end
+local function TeleportToGun(gunDrop)
+    if gunDrop and Plr.Character and Plr.Character:FindFirstChild("HumanoidRootPart") then
+        -- Телепортируем игрока к пистолету с небольшим смещением по оси Y
+        Plr.Character.HumanoidRootPart.CFrame = gunDrop.CFrame + Vector3.new(0, 2, 0)
+        print("Телепортация к GunDrop выполнена!")
     else
-        warn("GunDrop не найден!")
+        warn("GunDrop не найден или у игрока нет персонажа!")
     end
 end
 
 -- Обработчик события смерти шерифа
-local function OnSheriffDeath()
+local function OnSheriffDeath(sheriff)
     -- Ждем некоторое время, чтобы GunDrop успел появиться
-    wait(2)  -- Можно увеличить время, если необходимо
-    TeleportToGun()
-end
+    wait(1)
 
--- Предположим, что у шерифа есть Humanoid, и мы можем отследить его смерть
-local sheriff = -- Здесь должен быть код для получения шерифа
-if sheriff and sheriff.Character then
-    local humanoid = sheriff.Character:FindFirstChild("Humanoid")
-    if humanoid then
-        humanoid.Died:Connect(OnSheriffDeath)
+    -- Ищем GunDrop в workspace
+    local gunDrop = workspace:FindFirstChild("GunDrop")
+    if gunDrop then
+        TeleportToGun(gunDrop)
+    else
+        warn("GunDrop не найден после смерти шерифа!")
     end
 end
+
+-- Основная функция для отслеживания смерти шерифа
+local function TrackSheriff()
+    while true do
+        local sheriff = GetSheriff()
+        if sheriff and sheriff.Character then
+            local humanoid = sheriff.Character:FindFirstChild("Humanoid")
+            if humanoid then
+                -- Подключаемся к событию смерти шерифа
+                humanoid.Died:Connect(function()
+                    OnSheriffDeath(sheriff)
+                end)
+                break  -- Прерываем цикл, если шериф найден и событие подключено
+            end
+        end
+        wait(1)  -- Проверяем наличие шерифа каждую секунду
+    end
+end
+
+-- Запускаем отслеживание шерифа
+TrackSheriff()
