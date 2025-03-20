@@ -4,8 +4,10 @@ local Plr = game:GetService("Players").LocalPlayer
 -- Функция для поиска убийцы
 function GetMurderer()
     for _, v in pairs(game:GetService("Players"):GetPlayers()) do
-        if v.Backpack:FindFirstChild("Knife") or (v.Character and v.Character:FindFirstChild("Knife")) then
-            return v.Character
+        if v ~= Plr then -- Исключаем себя из поиска
+            if (v.Backpack:FindFirstChild("Knife") or (v.Character and v.Character:FindFirstChild("Knife"))) then
+                return v.Character
+            end
         end
     end
     return nil
@@ -71,9 +73,20 @@ function AimBot()
         return  -- Если туловище убийцы не найдено, выходим из функции
     end
 
-    -- Наводим камеру на туловище убийцы
+    -- Получаем камеру игрока
     local Camera = workspace.CurrentCamera
-    Camera.CFrame = CFrame.new(Camera.CFrame.Position, Torso.Position)
+
+    -- Наводим камеру на туловище убийцы с жесткой фиксацией
+    local function LockCameraToTarget()
+        while IsRoundActive() and IsPlayerAlive() and HasGun(Plr) and Murderer and Torso do
+            -- Постоянно обновляем позицию камеры, чтобы она была направлена на убийцу
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, Torso.Position)
+            task.wait()  -- Обновляем камеру каждый кадр
+        end
+    end
+
+    -- Запускаем жесткую фиксацию камеры на убийце
+    LockCameraToTarget()
 end
 
 -- Подключение функции AimBot к Heartbeat
