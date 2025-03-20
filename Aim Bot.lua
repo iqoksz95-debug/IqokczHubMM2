@@ -16,8 +16,46 @@ function HasGun(player)
     return player.Backpack:FindFirstChild("Gun") or (player.Character and player.Character:FindFirstChild("Gun"))
 end
 
+-- Функция для проверки, жив ли локальный игрок
+function IsPlayerAlive()
+    if not Plr.Character then
+        return false
+    end
+    local humanoid = Plr.Character:FindFirstChild("Humanoid")
+    return humanoid and humanoid.Health > 0
+end
+
+-- Функция для проверки, идет ли раунд
+function IsRoundActive()
+    -- Проверяем, есть ли убийца или шериф
+    local murdererFound = GetMurderer() ~= nil
+    local sheriffFound = false
+
+    for _, v in pairs(game:GetService("Players"):GetPlayers()) do
+        if HasGun(v) then
+            sheriffFound = true
+            break
+        end
+    end
+
+    -- Если нет убийцы или шерифа, раунд, скорее всего, завершен
+    return murdererFound or sheriffFound
+end
+
 -- Основная функция Aim Bot
 function AimBot()
+    -- Проверяем, идет ли раунд
+    if not IsRoundActive() then
+        warn("Раунд завершен, аимбот отключен!")
+        return
+    end
+
+    -- Проверяем, жив ли локальный игрок
+    if not IsPlayerAlive() then
+        warn("Локальный игрок мертв, аимбот отключен!")
+        return
+    end
+
     -- Проверяем, есть ли у игрока пистолет
     if not HasGun(Plr) then
         warn("У вас нет пистолета!")
@@ -41,21 +79,6 @@ function AimBot()
     -- Наводим камеру на туловище убийцы
     local Camera = workspace.CurrentCamera
     Camera.CFrame = CFrame.new(Camera.CFrame.Position, Torso.Position)
-end
-
--- Функция для проверки, жив ли локальный игрок
-function IsPlayerAlive()
-    if not Plr.Character then
-        return false
-    end
-    local humanoid = Plr.Character:FindFirstChild("Humanoid")
-    return humanoid and humanoid.Health > 0
-end
-
--- Внутри функции AimBot добавь проверку:
-if not IsPlayerAlive() then
-    warn("Локальный игрок мертв, аимбот отключен!")
-    return
 end
 
 -- Подключение функции AimBot к Heartbeat
