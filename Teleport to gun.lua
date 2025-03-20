@@ -1,60 +1,56 @@
 -- Получение локального игрока
 local Plr = game:GetService("Players").LocalPlayer
 
--- Функция для поиска шерифа
-function GetSheriff()
-    for _, v in pairs(game:GetService("Players"):GetPlayers()) do
-        if v ~= Plr then -- Исключаем себя из поиска
-            if (v.Backpack:FindFirstChild("Gun") or (v.Character and v.Character:FindFirstChild("Gun"))) then
-                return v
-            end
+-- Список карт для проверки
+local maps = {
+    "Hospital3",
+    "Office3",
+    "PoliceStation",
+    "Factory",
+    "ResearchFacility",
+    "Bank2",
+    "Workplace",
+    "House2",
+    "Mansion2",
+    "BioLab",
+    "Hotel",
+    "MilBase"
+}
+
+-- Функция для поиска GunDrop на карте
+local function FindGunDrop(mapName)
+    local map = workspace:FindFirstChild(mapName)
+    if map then
+        local gunDrop = map:FindFirstChild("GunDrop")
+        if gunDrop then
+            return gunDrop
         end
     end
     return nil
 end
 
--- Функция для телепортации к пистолету
+-- Функция для телепортации к GunDrop
 local function TeleportToGun(gunDrop)
     if gunDrop and Plr.Character and Plr.Character:FindFirstChild("HumanoidRootPart") then
-        -- Телепортируем игрока к пистолету с небольшим смещением по оси Y
+        -- Телепортируем игрока к GunDrop с небольшим смещением по оси Y
         Plr.Character.HumanoidRootPart.CFrame = gunDrop.CFrame + Vector3.new(0, 2, 0)
-        print("Телепортация к GunDrop выполнена!")
+        print("Телепортация к GunDrop выполнена на карте " .. gunDrop.Parent.Name)
     else
         warn("GunDrop не найден или у игрока нет персонажа!")
     end
 end
 
--- Обработчик события смерти шерифа
-local function OnSheriffDeath(sheriff)
-    -- Ждем некоторое время, чтобы GunDrop успел появиться
-    wait(1)
-
-    -- Ищем GunDrop в workspace
-    local gunDrop = workspace:FindFirstChild("GunDrop")
-    if gunDrop then
-        TeleportToGun(gunDrop)
-    else
-        warn("GunDrop не найден после смерти шерифа!")
-    end
-end
-
--- Основная функция для отслеживания смерти шерифа
-local function TrackSheriff()
-    while true do
-        local sheriff = GetSheriff()
-        if sheriff and sheriff.Character then
-            local humanoid = sheriff.Character:FindFirstChild("Humanoid")
-            if humanoid then
-                -- Подключаемся к событию смерти шерифа
-                humanoid.Died:Connect(function()
-                    OnSheriffDeath(sheriff)
-                end)
-                break  -- Прерываем цикл, если шериф найден и событие подключено
-            end
+-- Основная функция для поиска GunDrop на всех картах
+local function SearchForGunDrop()
+    for _, mapName in ipairs(maps) do
+        local gunDrop = FindGunDrop(mapName)
+        if gunDrop then
+            TeleportToGun(gunDrop)
+            return  -- Завершаем выполнение после нахождения GunDrop
         end
-        wait(1)  -- Проверяем наличие шерифа каждую секунду
     end
+    warn("GunDrop не найден ни на одной из карт!")
 end
 
--- Запускаем отслеживание шерифа
-TrackSheriff()
+-- Запускаем поиск GunDrop
+SearchForGunDrop()
