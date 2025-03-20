@@ -46,34 +46,29 @@ end
 function AimBot()
     -- Проверяем, идет ли раунд
     if not IsRoundActive() then
-        warn("Раунд завершен, аимбот отключен!")
-        return
+        return  -- Если раунд не активен, выходим из функции
     end
 
     -- Проверяем, жив ли локальный игрок
     if not IsPlayerAlive() then
-        warn("Локальный игрок мертв, аимбот отключен!")
-        return
+        return  -- Если игрок мертв, выходим из функции
     end
 
     -- Проверяем, есть ли у игрока пистолет
     if not HasGun(Plr) then
-        warn("У вас нет пистолета!")
-        return
+        return  -- Если пистолет не найден, выходим из функции
     end
 
     -- Получаем персонажа убийцы
     local Murderer = GetMurderer()
     if not Murderer then
-        warn("Убийца не найден!")
-        return
+        return  -- Если убийца не найден, выходим из функции
     end
 
     -- Получаем туловище убийцы
     local Torso = Murderer:FindFirstChild("UpperTorso") or Murderer:FindFirstChild("Torso")
     if not Torso then
-        warn("Туловище убийцы не найдено!")
-        return
+        return  -- Если туловище убийцы не найдено, выходим из функции
     end
 
     -- Наводим камеру на туловище убийцы
