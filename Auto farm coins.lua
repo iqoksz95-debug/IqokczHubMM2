@@ -37,7 +37,7 @@ function FindCoins()
     end
 
     -- Ищем монеты на текущей карте
-    local coinContainer = workspace[currentMap]:FindFirstChild("Coincontainer")
+    local coinContainer = workspace[currentMap]:FindFirstChild("CoinContainer")
     if not coinContainer then
         return {}  -- Если контейнер с монетами не найден, возвращаем пустой список
     end
@@ -54,10 +54,10 @@ end
 
 -- Функция для телепортации к монете и её сбора
 function CollectCoin(coin)
-    if Plr.Character and Plr.Character:FindFirstChild("HumanoidRootPart") and coin then
+    if Plr.Character and Plr.Character:FindFirstChild("HumanoidRootPart") and coin and coin.Parent then
         -- Телепортация к монете
         Plr.Character.HumanoidRootPart.CFrame = coin.CFrame
-        task.wait(0.5)  -- Ожидание для сбора монеты
+        task.wait(0.1)
 
         -- Симуляция сбора монеты
         firetouchinterest(Plr.Character.HumanoidRootPart, coin, 0)
@@ -81,7 +81,7 @@ function AutoFarmCoins()
             if coin and coin.Parent then  -- Проверка, что монета существует
                 CollectCoin(coin)
                 coinsCollected = coinsCollected + 1
-                task.wait(1)  -- Ожидание перед сбором следующей монеты
+                task.wait(0.1)
             end
         end
     end
