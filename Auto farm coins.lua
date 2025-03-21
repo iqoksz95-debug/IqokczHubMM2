@@ -1,71 +1,94 @@
-local AutoFarmEnabled = false
-local coinsCollected = 0  -- Инициализация переменной для подсчета монет
+-- Получение локального игрока
+local Plr = game:GetService("Players").LocalPlayer
 
--- Функция для поиска монет в ReplicatedStorage
+-- Список карт, на которых могут появляться монеты
+local maps = {
+    "Hospital3",
+    "Office3",
+    "PoliceStation",
+    "Factory",
+    "ResearchFacility",
+    "Bank2",
+    "Workplace",
+    "House2",
+    "Mansion2",
+    "BioLab",
+    "Hotel",
+    "MilBase"
+}
+
+-- Переменная для хранения количества собранных монет
+local coinsCollected = 0
+
+-- Функция для поиска монет на текущей карте
 function FindCoins()
-    local coins = {}
-    local coinObjects = game:GetService("ReplicatedStorage"):FindFirstChild("CoinObjects")
-    
-    if coinObjects then
-        for _, coin in pairs(coinObjects:GetDescendants()) do
-            if coin.Name == "Coin" and coin:IsA("BasePart") then
-                table.insert(coins, coin)
-            end
+    local currentMap = nil
+
+    -- Определяем текущую карту
+    for _, mapName in ipairs(maps) do
+        if workspace:FindFirstChild(mapName) then
+            currentMap = mapName
+            break
         end
     end
+
+    if not currentMap then
+        return {}  -- Если карта не найдена, возвращаем пустой список
+    end
+
+    -- Ищем монеты на текущей карте
+    local coinContainer = workspace[currentMap]:FindFirstChild("Coincontainer")
+    if not coinContainer then
+        return {}  -- Если контейнер с монетами не найден, возвращаем пустой список
+    end
+
+    local coins = {}
+    for _, coin in pairs(coinContainer:GetChildren()) do
+        if coin.Name == "Coin_Server" then
+            table.insert(coins, coin)
+        end
+    end
+
     return coins
 end
 
 -- Функция для телепортации к монете и её сбора
 function CollectCoin(coin)
-    local Plr = game:GetService("Players").LocalPlayer
     if Plr.Character and Plr.Character:FindFirstChild("HumanoidRootPart") and coin then
         -- Телепортация к монете
         Plr.Character.HumanoidRootPart.CFrame = coin.CFrame
         task.wait(0.5)  -- Ожидание для сбора монеты
 
-        -- Симуляция сбора монеты (если требуется)
+        -- Симуляция сбора монеты
         firetouchinterest(Plr.Character.HumanoidRootPart, coin, 0)
         firetouchinterest(Plr.Character.HumanoidRootPart, coin, 1)
     end
 end
 
--- Функция для переключения Auto Farm
-function ToggleAutoFarm(state)
-    AutoFarmEnabled = state
-    if state then
-        coinsCollected = 0  -- Сброс счетчика монет при включении автофарма
-        AutoFarmCoins()
-    end
-end
-
 -- Основная функция для автоматического сбора монет
 function AutoFarmCoins()
-    while AutoFarmEnabled and coinsCollected < 40 do
+    while coinsCollected < 39 do
         local coins = FindCoins()
         if #coins == 0 then
-            warn("Монеты не найдены!")
-            break
+            break  -- Если монеты не найдены, завершаем цикл
         end
 
         for _, coin in pairs(coins) do
-            if not AutoFarmEnabled or coinsCollected >= 40 then
-                break
+            if coinsCollected >= 39 then
+                break  -- Если собрано 39 монет, завершаем цикл
             end
 
             if coin and coin.Parent then  -- Проверка, что монета существует
                 CollectCoin(coin)
                 coinsCollected = coinsCollected + 1
-                print("Собрано монет: " .. coinsCollected)
                 task.wait(1)  -- Ожидание перед сбором следующей монеты
             end
         end
     end
 
-    if coinsCollected >= 40 then
-        warn("Сбор монет завершен! Собрано: " .. coinsCollected)
-    end
+    -- После сбора 39 монет уничтожаем скрипт
+    script:Destroy()
 end
 
--- Пример использования:
-ToggleAutoFarm(true)  -- Включить автофарм
+-- Запуск функции AutoFarmCoins
+AutoFarmCoins()
