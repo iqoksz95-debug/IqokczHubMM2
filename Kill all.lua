@@ -6,13 +6,20 @@ function HasKnife(player)
     return player.Backpack:FindFirstChild("Knife") or (player.Character and player.Character:FindFirstChild("Knife"))
 end
 
+-- Функция для проверки, жив ли игрок
+function IsPlayerAlive(player)
+    return player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0
+end
+
 -- Функция для убийства всех игроков
 function KillAll()
     -- Проверяем, есть ли у игрока нож
     if not HasKnife(Plr) then
-        warn("У вас нет ножа!")
-        return
+        return -- Если ножа нет, завершаем выполнение
     end
+
+    -- Таблица для хранения убитых игроков
+    local killedPlayers = {}
 
     -- Основной цикл для убийства всех игроков
     while true do
@@ -22,8 +29,8 @@ function KillAll()
 
         -- Цикл по всем игрокам
         for _, player in ipairs(players) do
-            -- Пропускаем себя и мертвых игроков
-            if player ~= Plr and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+            -- Пропускаем себя, мертвых игроков и уже убитых
+            if player ~= Plr and IsPlayerAlive(player) and not killedPlayers[player] then
                 allDead = false  -- Если найден живой игрок, устанавливаем флаг в false
 
                 -- Телепортируемся к игроку
@@ -38,8 +45,11 @@ function KillAll()
                     firetouchinterest(player.Character.HumanoidRootPart, knife.Handle, 1)
                 end
 
-                -- Ждем 0.25 секунд перед следующим убийством
-                wait(0.25)
+                -- Помечаем игрока как убитого
+                killedPlayers[player] = true
+
+                -- Ждем 1 секунду перед следующим убийством
+                task.wait(1)
             end
         end
 
@@ -49,8 +59,8 @@ function KillAll()
         end
     end
 
-    -- После завершения цикла выключаем скрипт
-    warn("Все игроки убиты. Скрипт завершен.")
+    -- После завершения цикла уничтожаем скрипт
+    script:Destroy()
 end
 
 -- Запуск функции KillAll
