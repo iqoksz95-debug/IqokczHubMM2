@@ -11,11 +11,71 @@ function IsPlayerAlive(player)
     return player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0
 end
 
+-- Функция для отключения управления персонажем
+local function DisableControls()
+    Plr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+    Plr.Character.HumanoidRootPart.Anchored = true
+end
+
+-- Функция для включения управления персонажем
+local function EnableControls()
+    Plr.Character.HumanoidRootPart.Anchored = false
+    Plr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+end
+
+-- Функция для телепортации за спину игрока и фиксации на спине
+local function TeleportBehindTarget(target)
+    if target and target:FindFirstChild("HumanoidRootPart") then
+        -- Отключаем управление
+        DisableControls()
+
+        -- Вычисляем позицию за спиной целевого игрока
+        local targetCFrame = target.HumanoidRootPart.CFrame
+        local offset = targetCFrame.LookVector * -3  -- Смещение на 3 единицы за спину
+        local newPosition = targetCFrame.Position + offset
+
+        -- Телепортируемся за спину
+        Plr.Character.HumanoidRootPart.CFrame = CFrame.new(newPosition, target.HumanoidRootPart.Position)
+
+        -- Фиксируем персонажа на спине целевого игрока с помощью BodyPosition
+        local bodyPosition = Instance.new("BodyPosition")
+        bodyPosition.Position = newPosition
+        bodyPosition.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        bodyPosition.Parent = Plr.Character.HumanoidRootPart
+
+        -- Ждем завершения телепортации
+        task.wait(0.2)
+
+        -- Возвращаем управление
+        EnableControls()
+
+        -- Удаляем BodyPosition после завершения
+        bodyPosition:Destroy()
+    end
+end
+
+-- Функция для убийства игрока ножом
+local function KillPlayer(target)
+    local knife = Plr.Backpack:FindFirstChild("Knife") or Plr.Character:FindFirstChild("Knife")
+    if knife then
+        knife.Parent = Plr.Character
+        knife:Activate()
+
+        -- Задержка для нанесения урона
+        task.wait(0.2)
+
+        -- Симулируем касание ножом
+        firetouchinterest(target.HumanoidRootPart, knife.Handle, 0)
+        firetouchinterest(target.HumanoidRootPart, knife.Handle, 1)
+    end
+end
+
 -- Функция для убийства всех игроков
 function KillAll()
     -- Проверяем, есть ли у игрока нож
     if not HasKnife(Plr) then
-        return -- Если ножа нет, завершаем выполнение
+        warn("Нож не найден!")
+        return
     end
 
     -- Таблица для хранения убитых игроков
@@ -33,17 +93,11 @@ function KillAll()
             if player ~= Plr and IsPlayerAlive(player) and not killedPlayers[player] then
                 allDead = false  -- Если найден живой игрок, устанавливаем флаг в false
 
-                -- Телепортируемся к игроку
-                Plr.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame
+                -- Телепортируемся за спину игрока
+                TeleportBehindTarget(player.Character)
 
                 -- Убиваем игрока
-                local knife = Plr.Backpack:FindFirstChild("Knife") or Plr.Character:FindFirstChild("Knife")
-                if knife then
-                    knife.Parent = Plr.Character
-                    knife:Activate()
-                    firetouchinterest(player.Character.HumanoidRootPart, knife.Handle, 0)
-                    firetouchinterest(player.Character.HumanoidRootPart, knife.Handle, 1)
-                end
+                KillPlayer(player.Character)
 
                 -- Помечаем игрока как убитого
                 killedPlayers[player] = true
