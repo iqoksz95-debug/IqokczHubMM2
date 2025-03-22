@@ -85,7 +85,8 @@ end
 -- Переключатель для автоматической стрельбы по убийце
 local AutoShootEnabled = false
 
-Toggle(Main, "Auto Shoot Murderer", false, function(state)
+-- Функция для переключения состояния автоматической стрельбы
+local function ToggleAutoShoot(state)
     AutoShootEnabled = state
     if AutoShootEnabled then
         -- Запускаем автоматическую стрельбу
@@ -93,5 +94,12 @@ Toggle(Main, "Auto Shoot Murderer", false, function(state)
             AutoShootMurderer()
             task.wait(1) -- Проверяем каждую секунду
         end
+    end
+end
+
+-- Подключение функции ToggleAutoShoot к клавише (например, J)
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    if input.KeyCode == Enum.KeyCode.J and not gameProcessed then
+        ToggleAutoShoot(not AutoShootEnabled)
     end
 end)
