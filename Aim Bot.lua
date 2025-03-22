@@ -1,5 +1,7 @@
 -- Получение локального игрока
 local Plr = game:GetService("Players").LocalPlayer
+local Camera = workspace.CurrentCamera
+local RunService = game:GetService("RunService")
 
 -- Функция для поиска убийцы
 function GetMurderer()
@@ -73,21 +75,22 @@ function AimBot()
         return  -- Если туловище убийцы не найдено, выходим из функции
     end
 
-    -- Получаем камеру игрока
-    local Camera = workspace.CurrentCamera
-
-    -- Наводим камеру на туловище убийцы с жесткой фиксацией
-    local function LockCameraToTarget()
-        while IsRoundActive() and IsPlayerAlive() and HasGun(Plr) and Murderer and Torso do
-            -- Постоянно обновляем позицию камеры, чтобы она была направлена на убийцу
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, Torso.Position)
-            task.wait()  -- Обновляем камеру каждый кадр
-        end
-    end
-
-    -- Запускаем жесткую фиксацию камеры на убийце
-    LockCameraToTarget()
+    -- Жесткая фиксация камеры на туловище убийцы
+    Camera.CFrame = CFrame.new(Camera.CFrame.Position, Torso.Position)
 end
 
 -- Подключение функции AimBot к Heartbeat
-game:GetService("RunService").Heartbeat:Connect(AimBot)
+RunService.Heartbeat:Connect(AimBot)
+
+-- Функция для переключения состояния аим-бота
+local function ToggleAimBot()
+    AimBotEnabled = not AimBotEnabled
+    print("AimBot Enabled:", AimBotEnabled)
+end
+
+-- Подключение функции ToggleAimBot к клавише K
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    if input.KeyCode == Enum.KeyCode.K and not gameProcessed then
+        ToggleAimBot()
+    end
+end)
