@@ -13,7 +13,7 @@ end
 
 -- Функция для проверки, есть ли у игрока пистолет
 function HasGun()
-    return Plr.Character and (Plr.Character:FindFirstChild("Gun") or Plr.Backpack:FindFirstChild("Gun"))
+    return Plr.Character and (Plr.Character:FindFirstChild("Gun") or Plr.Backpack:FindFirstChild("Gun")
 end
 
 -- Функция для проверки, находится ли убийца в зоне видимости
@@ -61,6 +61,20 @@ function AutoShootMurderer()
         return
     end
 
+    -- Получаем серверный скрипт для стрельбы
+    local KnifeServer = Gun:FindFirstChild("KnifeServer")
+    if not KnifeServer then
+        warn("KnifeServer не найден в Gun!")
+        return
+    end
+
+    -- Получаем метод для стрельбы
+    local ShootGun = KnifeServer:FindFirstChild("ShootGun")
+    if not ShootGun then
+        warn("ShootGun не найден в KnifeServer!")
+        return
+    end
+
     -- Цикл стрельбы по убийце
     while Murderer and Murderer:FindFirstChild("Humanoid") and Murderer.Humanoid.Health > 0 do
         -- Проверяем, находится ли убийца в зоне видимости
@@ -71,7 +85,7 @@ function AutoShootMurderer()
                 [2] = Murderer.HumanoidRootPart.Position, -- Позиция убийцы
                 [3] = "AH" -- Тип выстрела (можно изменить в зависимости от игры)
             }
-            Gun.KnifeServer.ShootGun:InvokeServer(unpack(args))
+            ShootGun:InvokeServer(unpack(args))
         end
 
         -- Ждем перед следующим выстрелом
