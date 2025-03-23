@@ -1,11 +1,9 @@
--- Получение локального игрока
 local Plr = game:GetService("Players").LocalPlayer
 
--- Функция для поиска шерифа
-function GetSheriff()
+local function GetSheriff()
     for _, v in pairs(game:GetService("Players"):GetPlayers()) do
-        if v ~= Plr then -- Исключаем себя из поиска
-            if (v.Backpack:FindFirstChild("Gun") or (v.Character and v.Character:FindFirstChild("Gun"))) then
+        if v ~= Plr then
+            if (v.Backpack:FindFirstChild("Gun")) or (v.Character and v.Character:FindFirstChild("Gun")) then
                 return v.Character
             end
         end
@@ -13,8 +11,7 @@ function GetSheriff()
     return nil
 end
 
--- Функция для телепорта к игроку
-function TeleportToPlayer(player)
+local function TeleportToPlayer(player)
     if player and player:FindFirstChild("HumanoidRootPart") then
         Plr.Character.HumanoidRootPart.CFrame = player.HumanoidRootPart.CFrame
         print("Телепорт к игроку выполнен!")
@@ -23,7 +20,6 @@ function TeleportToPlayer(player)
     end
 end
 
--- Телепорт к шерифу
 local sheriff = GetSheriff()
 if sheriff then
     TeleportToPlayer(sheriff)
