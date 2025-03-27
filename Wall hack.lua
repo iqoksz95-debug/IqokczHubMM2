@@ -1,21 +1,31 @@
--- WALL HACK
+-- WALL HACK (PERMANENT)
 local wallhackTransparency = 0.6 -- 60% прозрачность
+local wallhackActive = true
 
-local function setWallsTransparency(transparency)
+-- Функция для установки прозрачности
+local function setWallsTransparency()
     for _, part in ipairs(workspace:GetDescendants()) do
         if part:IsA("BasePart") then
-            -- Делаем прозрачными все BasePart (стены, полы, платформы и т.д.)
-            part.LocalTransparencyModifier = transparency
+            part.LocalTransparencyModifier = wallhackTransparency
         end
     end
 end
 
--- Включаем wallhack сразу при запуске скрипта
-setWallsTransparency(wallhackTransparency)
+-- Основной цикл обновления
+local function wallhackLoop()
+    while wallhackActive do
+        setWallsTransparency()
+        wait(1) -- Обновляем каждую секунду
+    end
+end
 
--- Опционально: можно добавить автоматическое обновление для новых частей
+-- Обработка новых объектов
 workspace.DescendantAdded:Connect(function(part)
-    if part:IsA("BasePart") then
+    if part:IsA("BasePart") and wallhackActive then
         part.LocalTransparencyModifier = wallhackTransparency
     end
 end)
+
+-- Запускаем сразу
+setWallsTransparency()
+wallhackLoop()
