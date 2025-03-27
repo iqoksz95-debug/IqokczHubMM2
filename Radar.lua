@@ -1,23 +1,29 @@
 -- RADAR
-local radarEnabled = false
-local radarBind = "N"
+local radarEnabled = true
 local radarGui = nil
-local lastRadarUpdate = 0
+local radarScreenGui = nil
+local dragging = false
+local dragInput, dragStart, startPos
+
+-- Переменные для отслеживания движения
+local lastPlayerPosition = Vector3.new(0, 0, 0)
+local positionChanged = false
+local selfDot = nil
 
 local function createRadar()
-    if radarGui then radarGui:Destroy() end
+    if radarScreenGui then radarScreenGui:Destroy() end
     
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "RadarGui"
-    screenGui.ResetOnSpawn = false
-    screenGui.Parent = game:GetService("CoreGui")
+    radarScreenGui = Instance.new("ScreenGui")
+    radarScreenGui.Name = "RadarGui"
+    radarScreenGui.ResetOnSpawn = false
+    radarScreenGui.Parent = game:GetService("CoreGui")
     
     radarGui = Instance.new("Frame")
     radarGui.Size = UDim2.new(0, 200, 0, 200)
     radarGui.Position = UDim2.new(0, 10, 0.5, -100)
     radarGui.BackgroundColor3 = Color3.new(0, 0, 0)
     radarGui.BackgroundTransparency = 0.5
-    radarGui.Parent = screenGui
+    radarGui.Parent = radarScreenGui
     
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 4)
@@ -41,90 +47,115 @@ local function createRadar()
     yLine.BackgroundColor3 = Color3.new(1, 1, 1)
     yLine.Parent = radarGui
     
-    return radarGui
+    -- Создаем синюю точку (игрока) один раз
+    selfDot = Instance.new("Frame")
+    selfDot.Name = "PlayerDot_Self"
+    selfDot.Size = UDim2.new(0, 6, 0, 6)
+    selfDot.Position = UDim2.new(0.5, -3, 0.5, -3)
+    selfDot.BackgroundColor3 = Color3.new(0, 0, 1)
+    selfDot.ZIndex = 10
+    selfDot.Parent = radarGui
+    
+    local selfCorner = Instance.new("UICorner")
+    selfCorner.CornerRadius = UDim.new(1, 0)
+    selfCorner.Parent = selfDot
+    
+    -- Функционал перемещения радара
+    radarGui.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = radarGui.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    radarGui.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+    
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            radarGui.Position = UDim2.new(
+                startPos.X.Scale, 
+                startPos.X.Offset + delta.X, 
+                startPos.Y.Scale, 
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
 end
 
 local function updateRadar()
     if not radarGui then return end
     
-    -- Очищаем старые точки
-    for _, child in ipairs(radarGui:GetChildren()) do
-        if child.Name == "PlayerDot" then
-            child:Destroy()
-        end
-    end
+    local localPlayer = game:GetService("Players").LocalPlayer
+    if not localPlayer then return end
     
-    local localPlayer = LocalPlayer
     local localCharacter = localPlayer.Character
     if not localCharacter then return end
+    
     local localRoot = localCharacter:FindFirstChild("HumanoidRootPart")
     if not localRoot then return end
     
-    -- Добавляем себя (синяя точка)
-    local selfDot = Instance.new("Frame")
-    selfDot.Name = "PlayerDot"
-    selfDot.Size = UDim2.new(0, 6, 0, 6)
-    selfDot.Position = UDim2.new(0.5, -3, 0.5, -3)
-    selfDot.BackgroundColor3 = Color3.new(0, 0, 1)
-    selfDot.Parent = radarGui
+    -- Определяем изменение позиции игрока
+    local currentPosition = localRoot.Position
+    positionChanged = (currentPosition - lastPlayerPosition).Magnitude > 0.1
+    lastPlayerPosition = currentPosition
     
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(1, 0)
-    corner.Parent = selfDot
-    
-    -- Добавляем других игроков (красные точки)
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= localPlayer and player.Character then
-            local character = player.Character
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
-            if humanoid and humanoid.Health > 0 then
-                local root = character:FindFirstChild("HumanoidRootPart")
-                if root then
-                    local relativePos = root.Position - localRoot.Position
-                    local x = relativePos.X / 50 -- масштабирование
-                    local z = relativePos.Z / 50
-                    
-                    -- Ограничиваем точки границами радара
-                    x = math.clamp(x, -90, 90)
-                    z = math.clamp(z, -90, 90)
-                    
-                    local dot = Instance.new("Frame")
-                    dot.Name = "PlayerDot"
-                    dot.Size = UDim2.new(0, 6, 0, 6)
-                    dot.Position = UDim2.new(0.5, x - 3, 0.5, z - 3)
-                    dot.BackgroundColor3 = Color3.new(1, 0, 0)
-                    dot.Parent = radarGui
-                    
-                    local corner = Instance.new("UICorner")
-                    corner.CornerRadius = UDim.new(1, 0)
-                    corner.Parent = dot
+    -- Обновляем только если позиция изменилась
+    if positionChanged then
+        -- Очищаем только красные точки
+        for _, child in ipairs(radarGui:GetChildren()) do
+            if child.Name == "PlayerDot" then
+                child:Destroy()
+            end
+        end
+        
+        -- Обновляем красные точки
+        for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
+            if player ~= localPlayer and player.Character then
+                local character = player.Character
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid and humanoid.Health > 0 then
+                    local root = character:FindFirstChild("HumanoidRootPart")
+                    if root then
+                        local relativePos = root.Position - currentPosition
+                        local x = relativePos.X / 50
+                        local z = relativePos.Z / 50
+                        
+                        x = math.clamp(x, -90, 90)
+                        z = math.clamp(z, -90, 90)
+                        
+                        local dot = Instance.new("Frame")
+                        dot.Name = "PlayerDot"
+                        dot.Size = UDim2.new(0, 6, 0, 6)
+                        dot.Position = UDim2.new(0.5, x - 3, 0.5, z - 3)
+                        dot.BackgroundColor3 = Color3.new(1, 0, 0)
+                        dot.Parent = radarGui
+                        
+                        local dotCorner = Instance.new("UICorner")
+                        dotCorner.CornerRadius = UDim.new(1, 0)
+                        dotCorner.Parent = dot
+                    end
                 end
             end
         end
     end
 end
 
-local radarToggle = createToggle(tabs[3], "Radar", false, function(state)
-    radarEnabled = state
-    if radarEnabled then
-        createRadar()
-    elseif radarGui then
-        radarGui:Destroy()
-        radarGui = nil
-    end
-end)
+-- Инициализация радара
+createRadar()
 
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if input.KeyCode == Enum.KeyCode[radarBind:upper()] and not gameProcessed then
-        radarEnabled = not radarEnabled
-        if radarEnabled then
-            createRadar()
-        elseif radarGui then
-            radarGui:Destroy()
-            radarGui = nil
-        end
-        if radarToggle:FindFirstChildOfClass("TextButton") then
-            radarToggle:FindFirstChildOfClass("TextButton").BackgroundColor3 = radarEnabled and Color3.new(0, 1, 0) or Color3.new(1, 0, 0)
-        end
-    end
+-- Обновление радара с максимальной частотой
+game:GetService("RunService").Heartbeat:Connect(function()
+    updateRadar()
 end)
